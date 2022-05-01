@@ -13,6 +13,9 @@ static float distance_cm_red = 0;
 static float distance_cm_blue = 0;
 static float distance_cm_green= 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
+static uint16_t lineWidth_red = 0;
+static uint16_t lineWidth_blue = 0;
+static uint16_t lineWidth_green = 0;
 
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
@@ -134,9 +137,6 @@ static THD_FUNCTION(ProcessImage, arg) {
 	uint8_t image_red[IMAGE_BUFFER_SIZE] = {0};
 	uint8_t image_green[IMAGE_BUFFER_SIZE] = {0};
 	uint8_t image_blue[IMAGE_BUFFER_SIZE] = {0};
-	uint16_t lineWidth_red = 0;
-	uint16_t lineWidth_blue = 0;
-	uint16_t lineWidth_green = 0;
 
 	bool send_to_computer = true;
 
@@ -151,7 +151,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 			//extracts first 5bits of the first byte
 			//takes nothing from the second byte
 			image_red[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
-			image_blue[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07) | ((uint8_t)img_buff_ptr&0xE0);
+			image_blue[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07) | ((uint8_t)img_buff_ptr[i+1] & 0xE0);
 			image_green[i/2] = (uint8_t)img_buff_ptr[i+1]&0x1F;
 		}
 
@@ -159,22 +159,27 @@ static THD_FUNCTION(ProcessImage, arg) {
 		lineWidth_red = extract_line_width(image_red);
 		lineWidth_blue = extract_line_width(image_blue);
 		lineWidth_green = extract_line_width(image_green);
+
 		//converts the width into a distance between the robot and the camera
 		if(lineWidth_red) {
-			distance_cm_red = PXTOCM/lineWidth;
+			distance_cm_red = PXTOCM/lineWidth_red;
 		}
 
 		if(lineWidth_blue) {
-			distance_cm_blue= PXTOCM/lineWidth;
+			distance_cm_blue= PXTOCM/lineWidth_blue;
 		}
 
 		if(lineWidth_green) {
-			distance_cm_green = PXTOCM/lineWidth;
+			distance_cm_green = PXTOCM/lineWidth_green;
 		}
 
-		if(send_to_computer){
+		if((send_to_computer)&&(lineWidth_red)){
 			//sends to the computer the image
-			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
+			SendUint8ToComputer(image_red, IMAGE_BUFFER_SIZE);
+		}else if ((send_to_computer)&&(lineWidth_blue)){
+			SendUint8ToComputer(image_blue, IMAGE_BUFFER_SIZE);
+		}else if ((send_to_computer)&&(lineWidth_green)){
+			SendUint8ToComputer(image_green, IMAGE_BUFFER_SIZE);
 		}
 		//invert the bool
 		send_to_computer = !send_to_computer;
@@ -185,12 +190,24 @@ float get_distance_cm_red(void){
 	return distance_cm_red;
 }
 
+uint16_t get_lineWidth_red(void){
+	return lineWidth_red;
+}
+
 float get_distance_cm_blue(void){
 	return distance_cm_blue;
 }
 
+uint16_t get_lineWidth_blue(void){
+	return lineWidth_blue;
+}
+
 float get_distance_cm_green(void){
 	return distance_cm_green;
+}
+
+uint16_t get_lineWidth_green(void){
+	return lineWidth_green;
 }
 
 uint16_t get_line_position(void){
