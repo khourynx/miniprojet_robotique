@@ -57,13 +57,13 @@ static THD_FUNCTION(PiRegulator, arg) {
         
         //computes the speed to give to the motors
         //distance_cm is modified by the image processing thread
-        if (get_lineWidth_red()) {
-        speed = pi_regulator(get_distance_cm_red(), GOAL_DISTANCE_RED);
-        } else if (get_lineWidth_green()){
-        	speed = pi_regulator(get_distance_cm_green(), GOAL_DISTANCE);
-        }else if (get_lineWidth_blue()){
-        	speed = pi_regulator(get_distance_cm_blue(), GOAL_DISTANCE);
-        }
+        //if (get_lineWidth_red()) {
+        speed = pi_regulator(get_distance_cm(), GOAL_DISTANCE_RED);
+        //} else if (get_lineWidth_green()){
+        //	speed = pi_regulator(get_distance_cm_green(), GOAL_DISTANCE);
+        //}else if (get_lineWidth_blue()){
+        //	speed = pi_regulator(get_distance_cm_blue(), GOAL_DISTANCE);
+       // }
         //computes a correction factor to let the robot rotate to be in front of the line
         speed_correction = (get_line_position() - (IMAGE_BUFFER_SIZE/2));
 
