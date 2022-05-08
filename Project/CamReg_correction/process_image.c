@@ -7,20 +7,19 @@
 #include <camera/po8030.h>
 
 #include <process_image.h>
+#include <process_image.h>
+#include <proximity_sensor.h>
 
 #define RED_GAIN 0x5E
 #define BLUE_GAIN 0x5D
 #define GREEN_GAIN 0x48
 
 static float distance_cm = 0;
-//static float distance_cm_blue = 0;
-//static float distance_cm_green= 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
-//static uint16_t lineWidth_blue = 0;
-//static uint16_t lineWidth_green = 0;
+static uint32_t mean = 0;
 
 //semaphore
-static BSEMAPHORE_DECL(image_ready_sem, TRUE); // @suppress("Field cannot be resolved")
+static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 
 /*
  *  Returns the line's width extracted from the image buffer given
@@ -30,7 +29,6 @@ uint16_t extract_line_width(uint8_t *buffer){
 
 	uint16_t i = 0, begin = 0, end = 0, width = 0;
 	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
-	uint32_t mean = 0;
 
 	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
@@ -139,10 +137,9 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	//uint8_t image_green[IMAGE_BUFFER_SIZE] = {0};
-	//uint8_t image_blue[IMAGE_BUFFER_SIZE] = {0};
 
 	bool send_to_computer = true;
+
 
     while(1){
     	//waits until an image has been captured
@@ -155,39 +152,21 @@ static THD_FUNCTION(ProcessImage, arg) {
 			//extracts first 5bits of the first byte
 			//takes nothing from the second byte
 			image[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
-			//image_green[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07) | ((uint8_t)img_buff_ptr[i+1] & 0xE0);
-			//image_blue[i/2] = (uint8_t)img_buff_ptr[i+1]&0x1F;
 		}
 
-		//SendUint8ToComputer(image_red, IMAGE_BUFFER_SIZE);
 
 		//search for a line in the image and gets its width in pixels
 		lineWidth = extract_line_width(image);
-		//lineWidth_blue = extract_line_width(image_blue);
-		//lineWidth_green = extract_line_width(image_green);
 
 		//converts the width into a distance between the robot and the camera
 		if(lineWidth) {
 			distance_cm = PXTOCM/lineWidth;
 		}
 
-		//if(lineWidth_blue) {
-		//	distance_cm_blue= PXTOCM/lineWidth_blue;
-		//}
-
-		//if(lineWidth_green) {
-		//	distance_cm_green = PXTOCM/lineWidth_green;
-		//}
-
-		if(send_to_computer){
+		if((send_to_computer)&&(mean>110)){
 			//sends to the computer the image
 			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
 		}
-		//}else if ((send_to_computer)&&(lineWidth_blue)){
-		//	SendUint8ToComputer(image_blue, IMAGE_BUFFER_SIZE);
-		//}else if ((send_to_computer)&&(lineWidth_green)){
-		//	SendUint8ToComputer(image_green, IMAGE_BUFFER_SIZE);
-		//}
 		//invert the bool
 		send_to_computer = !send_to_computer;
     }
@@ -197,25 +176,9 @@ float get_distance_cm(void){
 	return distance_cm;
 }
 
-//uint16_t get_lineWidth(void){
-//	return lineWidth;
-//}
-
-//float get_distance_cm_blue(void){
-//	return distance_cm_blue;
-//}
-
-//uint16_t get_lineWidth_blue(void){
-//	return lineWidth_blue;
-//}
-
-//float get_distance_cm_green(void){
-//	return distance_cm_green;
-//}
-
-//uint16_t get_lineWidth_green(void){
-//	return lineWidth_green;
-//}
+uint32_t get_mean_image(void){
+	return mean;
+}
 
 uint16_t get_line_position(void){
 	return line_position;
