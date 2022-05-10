@@ -19,7 +19,6 @@ static BSEMAPHORE_DECL(prox_ready_sem, TRUE);
 
 static int distance_IR1 = 0;
 static int distance_IR8 = 0;
-static uint8_t object_nearby_detection = 0;
 
 void turn_robot(double angle){
 	unsigned int step_goal;
@@ -89,8 +88,13 @@ static THD_FUNCTION(Motor, arg) {
         chBSemWait(&prox_ready_sem);
 
         if (get_calibrated_prox(IR_FRONT_RIGHT)>2000 || get_calibrated_prox(IR_FRONT_LEFT)>2000){
-
-            turn_robot(90);
+        	if (get_red_detected()){
+        		turn_robot(ANGLE_RED);
+        	}else if (get_blue_detected()){
+        		turn_robot(ANGLE_BLUE);
+        	}else if (get_green_detected()){
+        		turn_robot(ANGLE_GREEN);
+        	}
 
         }else{
     		right_motor_set_speed(MOTOR_R);
@@ -105,14 +109,6 @@ int get_distance_IR1(void){
 
 int get_distance_IR8(void){
 	return distance_IR8;
-}
-
-void object_nearby (void){
-	if ((distance_IR1<2000) && (distance_IR8<2000)){
-		object_nearby_detection=0;
-	}else{
-		object_nearby_detection=1;
-	}
 }
 
 void motor_start(void){

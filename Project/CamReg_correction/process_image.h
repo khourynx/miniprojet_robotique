@@ -3,6 +3,8 @@
 
 float get_distance_cm(void);
 uint8_t get_red_detected(void);
+uint8_t get_blue_detected(void);
+uint8_t get_green_detected(void);
 uint16_t get_line_position(void);
 void process_image_start(void);
 

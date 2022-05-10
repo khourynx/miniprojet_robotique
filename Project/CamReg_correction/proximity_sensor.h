@@ -12,4 +12,7 @@ void motor_start(void);
 #define IR_FRONT_RIGHT 		0
 #define IR_FRONT_LEFT 		7
 
+#define ANGLE_RED       	90
+#define ANGLE_GREEN			45
+#define ANGLE_BLUE			20
 #endif /* PROXIMITY_SENSOR_H_ */

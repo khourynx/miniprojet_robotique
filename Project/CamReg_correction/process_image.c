@@ -13,6 +13,8 @@
 #define GREEN_GAIN 0x48
 
 static uint8_t Red_detected = 0;
+static uint8_t Blue_detected = 0;
+static uint8_t Green_detected = 0;
 
 
 //semaphore
@@ -48,11 +50,14 @@ static THD_FUNCTION(ProcessImage, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
-    uint16_t lineWidth = 0;
 
 	uint8_t *img_buff_ptr;
-	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
-	uint32_t mean_image = 0;
+	uint8_t image_red[IMAGE_BUFFER_SIZE] = {0};
+	uint8_t image_blue[IMAGE_BUFFER_SIZE] = {0};
+	uint8_t image_green[IMAGE_BUFFER_SIZE] = {0};
+	uint32_t mean_image_red = 0;
+	uint32_t mean_image_blue = 0;
+	uint32_t mean_image_green = 0;
 
 	bool send_to_computer = true;
 
@@ -67,25 +72,51 @@ static THD_FUNCTION(ProcessImage, arg) {
 		for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){
 			//extracts first 5bits of the first byte
 			//takes nothing from the second byte
-			image[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
-			mean_image+=image[i/2];
+			image_red[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
+			image_blue[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07) | ((uint8_t)img_buff_ptr[i+1] & 0xE0);
+			image_green[i/2] = (uint8_t)img_buff_ptr[i+1]&0x1F;
+
+			mean_image_red+=image_red[i/2];
+			mean_image_blue+=image_blue[i/2];
+			mean_image_green+=image_green[i/2];
 		}
 
-		mean_image/=IMAGE_BUFFER_SIZE;
+		mean_image_red/=IMAGE_BUFFER_SIZE;
+		mean_image_green/=IMAGE_BUFFER_SIZE;
+		mean_image_blue/=IMAGE_BUFFER_SIZE;
 
-		if((mean_image>50)){
+		if((mean_image_red>mean_image_green) && (mean_image_red>mean_image_blue)){
 			//sends to the computer the image
 			Red_detected=1;
+			Blue_detected=0;
+			Green_detected=0;
+		}else if ((mean_image_blue>mean_image_green) && (mean_image_red<mean_image_blue)) {
+			Red_detected=0;
+			Blue_detected=1;
+			Green_detected=0;
+		}else if ((mean_image_green>mean_image_blue) && (mean_image_green>mean_image_blue)) {
+			Red_detected=0;
+			Blue_detected=0;
+			Green_detected=1;
 		}else{
 			Red_detected=0;
+			Blue_detected=0;
+			Green_detected=0;
 		}
-		//invert the bool
-		send_to_computer = !send_to_computer;
+
     }
 }
 
 uint8_t get_red_detected(void){
 	return Red_detected;
+}
+
+uint8_t get_blue_detected(void){
+	return Blue_detected;
+}
+
+uint8_t get_green_detected(void){
+	return Green_detected;
 }
 
 
