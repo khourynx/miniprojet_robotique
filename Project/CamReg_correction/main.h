@@ -17,14 +17,14 @@ extern "C" {
 #define ROTATION_THRESHOLD		10
 #define ROTATION_COEFF			2 
 #define PXTOCM					1570.0f //experimental value
-#define GOAL_DISTANCE 			10.0f
+#define GOAL_DISTANCE 			3.0f
 #define MAX_DISTANCE 			25.0f
 #define ERROR_THRESHOLD			0.1f	//[cm] because of the noise of the camera
-#define KP						1000.0f
-#define KI 						3.5f	//must not be zero
+#define KP						800.0f  //1000   //600 is good but need to be optimized
+#define KI 						1.0f	//must not be zero  //3.5f
 #define MAX_SUM_ERROR 			(MOTOR_SPEED_LIMIT/KI)
-#define MOTOR_SPEED_L			450	// steps/s = 5 cm/s
-#define MOTOR_SPEED_R			450	// steps/s = 5 cm/s
+#define MOTOR_L					450	// steps/s = 5 cm/s
+#define MOTOR_R					450	// steps/s = 5 cm/s
 #define DISTANCE_LIMITE_VIRAGE  1
 #define TURN_FACTOR				360
 #define WHEEL_PERIMETER         13 // [cm]

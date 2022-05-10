@@ -7,15 +7,17 @@
 #include "hal.h"
 #include "memory_protection.h"
 #include <usbcfg.h>
+#include <msgbus/messagebus.h>
+#include <i2c_bus.h>
 #include <main.h>
 #include <motors.h>
 #include <camera/po8030.h>
 #include <sensors/proximity.h>
 #include <chprintf.h>
 
-#include <pi_regulator.h>
 #include <process_image.h>
 #include <proximity_sensor.h>
+
 void SendUint8ToComputer(uint8_t* data, uint16_t size) 
 {
 	chSequentialStreamWrite((BaseSequentialStream *)&SD3, (uint8_t*)"START", 5);
@@ -35,11 +37,18 @@ static void serial_start(void)
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
 
+messagebus_t bus;
+MUTEX_DECL(bus_lock);
+CONDVAR_DECL(bus_condvar);
+
 int main(void)
 {
     halInit();
     chSysInit();
     mpu_init();
+
+    //messagebus int
+    messagebus_init(&bus, &bus_lock, &bus_condvar);
 
     //starts the serial communication
     serial_start();
@@ -48,19 +57,21 @@ int main(void)
     //starts the camera
     dcmi_start();
 	po8030_start();
+
+	proximity_start();
+	calibrate_ir();
+
 	//inits the motors
 	motors_init();
 
 	//stars the threads for the pi regulator and the processing of the image
-	pi_regulator_start();
+	motor_start();
 	process_image_start();
-	//proximity_sensor_start();
-	//calibrate_ir();
+
 
     /* Infinite loop. */
     while (1) {
-    	//waits 1 second
-        chThdSleepMilliseconds(1000);
+
 
     }
 }
