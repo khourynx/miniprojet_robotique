@@ -8,9 +8,9 @@
 #include <process_image.h>
 #include <proximity_sensor.h>
 
-#define RED_GAIN 0x5E
-#define BLUE_GAIN 0x5D
-#define GREEN_GAIN 0x48
+#define RED_GAIN 0x4A
+#define BLUE_GAIN 0x45
+#define GREEN_GAIN 0x5D
 
 static uint8_t Red_detected = 0;
 static uint8_t Blue_detected = 0;
@@ -30,7 +30,9 @@ static THD_FUNCTION(CaptureImage, arg) {
 	//Takes pixels 0 to IMAGE_BUFFER_SIZE of the line 10 + 11 (minimum 2 lines because reasons)
 	po8030_advanced_config(FORMAT_RGB565, 0, 10, IMAGE_BUFFER_SIZE, 2, SUBSAMPLING_X1, SUBSAMPLING_X1);
 	dcmi_enable_double_buffering();
+	po8030_set_awb(0);
 	po8030_set_rgb_gain(RED_GAIN, GREEN_GAIN, BLUE_GAIN);
+	po8030_set_exposure(2048,0);
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
 
@@ -59,7 +61,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 	uint32_t mean_image_blue = 0;
 	uint32_t mean_image_green = 0;
 
-	bool send_to_computer = true;
+	//bool send_to_computer = true;
 
 
     while(1){
@@ -72,9 +74,9 @@ static THD_FUNCTION(ProcessImage, arg) {
 		for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){
 			//extracts first 5bits of the first byte
 			//takes nothing from the second byte
-			image_red[i/2] = (uint8_t)img_buff_ptr[i]&0xF8;
-			image_blue[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07) | ((uint8_t)img_buff_ptr[i+1] & 0xE0);
-			image_green[i/2] = (uint8_t)img_buff_ptr[i+1]&0x1F;
+			image_red[i/2] = ((uint8_t)img_buff_ptr[i]&0xF8 >> 2);
+			image_green[i/2] = ((uint8_t)img_buff_ptr[i] & 0x07 << 3) | ((uint8_t)img_buff_ptr[i+1] & 0xE0 >> 5);
+			image_blue[i/2] = (uint8_t)img_buff_ptr[i+1]&0x1F;
 
 			mean_image_red+=image_red[i/2];
 			mean_image_blue+=image_blue[i/2];
@@ -94,7 +96,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 			Red_detected=0;
 			Blue_detected=1;
 			Green_detected=0;
-		}else if ((mean_image_green>mean_image_blue) && (mean_image_green>mean_image_blue)) {
+		}else if ((mean_image_green>mean_image_blue) && (mean_image_green>mean_image_red)) {
 			Red_detected=0;
 			Blue_detected=0;
 			Green_detected=1;
@@ -105,6 +107,12 @@ static THD_FUNCTION(ProcessImage, arg) {
 		}
 
     }
+}
+
+void reset_function(void){
+	Red_detected=0;
+	Blue_detected=0;
+	Green_detected=0;
 }
 
 uint8_t get_red_detected(void){

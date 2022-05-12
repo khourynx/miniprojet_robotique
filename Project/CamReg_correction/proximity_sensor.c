@@ -89,13 +89,14 @@ static THD_FUNCTION(Motor, arg) {
 
         if (get_calibrated_prox(IR_FRONT_RIGHT)>2000 || get_calibrated_prox(IR_FRONT_LEFT)>2000){
         	if (get_red_detected()){
-        		//turn_robot(ANGLE_RED);
-        		right_motor_set_speed(0);
-        		left_motor_set_speed(0);
+        		turn_robot(ANGLE_RED);
+        		reset_function();
         	}else if (get_blue_detected()){
         		turn_robot(ANGLE_BLUE);
+        		reset_function();
         	}else if (get_green_detected()){
         		turn_robot(ANGLE_GREEN);
+        		reset_function();
         	}
 
         }else{
