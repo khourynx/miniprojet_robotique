@@ -38,9 +38,11 @@ void turn_robot(double angle){
 		right_motor_set_speed(MOTOR_R);
 		left_motor_set_speed(-MOTOR_L);
 
+		//Wait to reach the final position
 		while((right_motor_get_pos()<=step_goal && left_motor_get_pos() >=0)){
 			__asm__ volatile("nop");
 		}
+		//Reached position stop the motor so that we can go forward in the other thread
 		right_motor_set_speed(0);
 		left_motor_set_speed(0);
 	}
@@ -49,9 +51,12 @@ void turn_robot(double angle){
 		left_motor_set_pos(0);
 		right_motor_set_speed(-MOTOR_R);
 		left_motor_set_speed(MOTOR_L);
+
+		//Wait to reach the final position
 		while((left_motor_get_pos()<=step_goal) && (right_motor_get_pos() >=0)){
 			__asm__ volatile("nop");
 		}
+		//Reached position stop the motor so that we can go forward in the other thread
 		right_motor_set_speed(0);
 		left_motor_set_speed(0);
 	}
