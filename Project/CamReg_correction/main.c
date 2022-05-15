@@ -1,3 +1,10 @@
+/*Header:
+ * Author/Editor: Marc El Khoury and Joey Kodeih
+ * This is the main file where we did the initiation of each peripheral
+ * We called the start of the 4 different threads
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,6 +44,7 @@ static void serial_start(void)
 	sdStart(&SD3, &ser_cfg); // UART3.
 }
 
+//Declaration of the Robot IPC bus for the proximity sensor to work (An assistant gave us that)
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
 CONDVAR_DECL(bus_condvar);
@@ -58,14 +66,16 @@ int main(void)
     dcmi_start();
 	po8030_start();
 
+	//initiation of the proximity sensors and calibration
 	proximity_start();
 	calibrate_ir();
 
 	//inits the motors
 	motors_init();
 
-	//stars the threads for the pi regulator and the processing of the image
+	//starts the threads for the motor and proximity sensors
 	motor_start();
+	//starts the threads for the capture and processing of the image
 	process_image_start();
 
 

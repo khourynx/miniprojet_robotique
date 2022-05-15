@@ -2,17 +2,13 @@
 #define PROXIMITY_SENSOR_H_
 
 void turn_robot(double angle);
-int get_distance_IR1(void);
-int get_distance_IR8(void);
-uint8_t get_object_nearby_detection (void);
-void object_nearby (void);
-void proximity_sensor_start(void);
 void motor_start(void);
 
 #define IR_FRONT_RIGHT 		0
 #define IR_FRONT_LEFT 		7
 
-#define ANGLE_RED       	0
-#define ANGLE_GREEN			45
-#define ANGLE_BLUE			-45
+#define ANGLE_RED       	50
+#define ANGLE_GREEN			95
+#define ANGLE_BLUE			-50
+
 #endif /* PROXIMITY_SENSOR_H_ */
