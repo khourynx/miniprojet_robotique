@@ -85,6 +85,7 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 			mean_image_red+=image_red[i/2];
 			mean_image_blue+=image_blue[i/2];
+			mean_image_green+=image_green[i/2];
 		}
 
 		mean_image_red/=IMAGE_BUFFER_SIZE;
